@@ -68,24 +68,39 @@ namespace MachineLearningProjectsWithDifferentAlgos.Regression
                 = mLContext.Transforms.Concatenate("Features", "YearsOfExperience")
                 .Append(mLContext.Regression.Trainers.Sdca(labelColumnName: "Salary", maximumNumberOfIterations: 100));
 
+            DataOperationsCatalog.TrainTestData split = mLContext.Data.TrainTestSplit(trainingData, testFraction: 0.8);
+
             // Train the model
             Microsoft.ML.Data.TransformerChain<Microsoft.ML.Data.RegressionPredictionTransformer<Microsoft.ML.Trainers.LinearRegressionModelParameters>> model
-                = pipeline.Fit(trainingData);
+                = pipeline.Fit(split.TrainSet);
 
-            // Create a prediction engine
-            PredictionEngine<InputModel, OutputModel> predictionEngine = mLContext.Model.CreatePredictionEngine<InputModel, OutputModel>(model);
+            //evaluate the model
+            IDataView predictions = model.Transform(split.TestSet);
 
-            // Create a new input instance for prediction
-            InputModel inputInstance = new InputModel()
-            {
-                YearsOfExperience = 5.9f
-            };
+            // Get the metrics
+            Microsoft.ML.Data.RegressionMetrics metrics = mLContext.Regression.Evaluate(predictions, labelColumnName: "Salary");
 
-            // Make a prediction
-            OutputModel prediction = predictionEngine.Predict(inputInstance);
+            // Output the metrics
+            Console.WriteLine($"R-squared: {metrics.RSquared}");
+            Console.WriteLine($"Mean Absolute Error: {metrics.MeanAbsoluteError}");
+            Console.WriteLine($"Mean Squared Error: {metrics.MeanSquaredError}");
+            Console.WriteLine($"Root Mean Squared Error: {metrics.RootMeanSquaredError}");
+            Console.WriteLine($"Loss Function: {metrics.LossFunction}");
 
-            // Output the prediction result
-            Console.WriteLine($"Predicted Salary for {inputInstance.YearsOfExperience} years of experience: {prediction.Salary:C2}");
+            //// Create a prediction engine
+            //PredictionEngine<InputModel, OutputModel> predictionEngine = mLContext.Model.CreatePredictionEngine<InputModel, OutputModel>(model);
+
+            //// Create a new input instance for prediction
+            //InputModel inputInstance = new InputModel()
+            //{
+            //    YearsOfExperience = 5.9f
+            //};
+
+            //// Make a prediction
+            //OutputModel prediction = predictionEngine.Predict(inputInstance);
+
+            //// Output the prediction result
+            //Console.WriteLine($"Predicted Salary for {inputInstance.YearsOfExperience} years of experience: {prediction.Salary:C2}");
         }
     }
 }
