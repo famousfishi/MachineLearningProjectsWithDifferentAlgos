@@ -64,14 +64,14 @@ namespace MachineLearningProjectsWithDifferentAlgos.Regression
             IDataView trainingData = mLContext.Data.LoadFromEnumerable(inputData);
 
             // Define the training pipeline
-            Microsoft.ML.Data.EstimatorChain<Microsoft.ML.Data.RegressionPredictionTransformer<Microsoft.ML.Trainers.LinearRegressionModelParameters>> pipeline
+            var pipeline
                 = mLContext.Transforms.Concatenate("Features", "YearsOfExperience")
-                .Append(mLContext.Regression.Trainers.Sdca(labelColumnName: "Salary", maximumNumberOfIterations: 100));
+                .Append(mLContext.Regression.Trainers.LbfgsPoissonRegression(labelColumnName: "Salary"));
 
             DataOperationsCatalog.TrainTestData split = mLContext.Data.TrainTestSplit(trainingData, testFraction: 0.8);
 
             // Train the model
-            Microsoft.ML.Data.TransformerChain<Microsoft.ML.Data.RegressionPredictionTransformer<Microsoft.ML.Trainers.LinearRegressionModelParameters>> model
+            var model
                 = pipeline.Fit(split.TrainSet);
 
             //evaluate the model
